@@ -349,14 +349,14 @@ void navSound(int sfx) {
 int ButtonPressed() {
   if(analogRead(pinButton) > 512) {
     if (timeButtonOn < 10000) {timeButtonOn += 1;}
-    if (timeButtonOn > 8000 && modeButton == ShortReset) {modeButton=Hold;tMenu=millis();tSleep=millis();}
+    if (timeButtonOn > 4000 && modeButton == ShortReset) {modeButton=Hold;tMenu=millis();tSleep=millis();}
     if (modeButton != ShortReset) {timeButtonOn=0;}
     timeButtonOff = 0;
     } 
   else {
     if (timeButtonOff < 1000) {timeButtonOff += 1;};
-    if (timeButtonOff > 100 && timeButtonOn > 100) {modeButton=Short;timeButtonOn=0;tMenu=millis();tSleep=millis();};
-    if (timeButtonOff > 100 && modeButton == HoldReset) {modeButton=ShortReset;timeButtonOn=0;};    
+    if (timeButtonOff > 50 && timeButtonOn > 50) {modeButton=Short;timeButtonOn=0;tMenu=millis();tSleep=millis();};
+    if (timeButtonOff > 50 && modeButton == HoldReset) {modeButton=ShortReset;timeButtonOn=0;};    
   }
   return modeButton;
 }
