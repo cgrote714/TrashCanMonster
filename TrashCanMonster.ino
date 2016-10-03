@@ -32,6 +32,11 @@ String sOrder;
 String sStartup;
 int manualPos=0;
 long tSleep=0;
+int triggerCount=0;
+const int triggerThreshold=500;
+String propMode = "Idle";
+int SelectedSound;
+int LastSound=0;
 
 char ESC = 0xFE;
 
@@ -86,6 +91,7 @@ void setup() {
   LCDon();
 
   // Initialize Prop
+  randomSeed(analogRead(5));
   initOutputs();
   loadEEPROM();
   delay(2000);
@@ -202,7 +208,7 @@ void loop(){
       }
       if (ButtonPressed() == Hold) {
         modeButton=HoldReset;
-        //openValve();
+        OpenValve();
         manualPos=1;
         WriteLCD1("Up    Read: ");
         tAltShow=0;
@@ -216,7 +222,7 @@ void loop(){
       }
       if (ButtonPressed() == Hold) {
         modeButton=HoldReset;
-        //closeValve();
+        CloseValve();
         manualPos=0;
         WriteLCD1("Down  Read: ");
         tAltShow=0;
@@ -240,12 +246,81 @@ void loop(){
 
   if (sMenu != "Manual") {
     // Regular prop run routine
-      
+    if (propMode=="LightOff") {SoundsOff();propMode="Completed";}
+    if (propMode=="ValveClosed") {LightOff();}
+    if (propMode=="ReadyToClose") {CloseValve();}
+    if (propMode=="ValveOpen") {OpenDelay();}
+    if (propMode=="SoundPlaying") {OpenValve();}
+    if (propMode=="LightOn") {PlaySound();}
+    if (propMode=="Triggered") {SelectSound();LightOn();}
+    CheckTrigger();
   }
   
   if (sMenu != "Mode" && tMenu !=0 && millis()-tMenu>10000) {LCDbcOff();saveEEPROM();sMenu="Mode";displayMode();}
   if (sMenu != "Sleep" && millis()-tSleep > 30000) {LCDback(1);sMenu="Sleep";WriteLCD2("Hold to wake");}
   
+}
+
+void SoundsOff() {
+  digitalWrite(pinRelaySFX1, HIGH);
+  digitalWrite(pinRelaySFX2, HIGH);
+  digitalWrite(pinRelaySFX3, HIGH);
+  digitalWrite(pinRelaySFX4, HIGH);
+}
+
+void OpenDelay() {
+  // certain sounds may take longer to finish or may want to add canned air
+  if (SelectedSound==1) {delay(10);};
+  if (SelectedSound==2) {delay(10);};
+  if (SelectedSound==3) {delay(10);};
+  if (SelectedSound==4) {delay(10);};
+  propMode="ReadyToClose";
+}
+
+void PlaySound() {
+  // some sounds may take a while to get started
+  if (SelectedSound==1) {digitalWrite(pinRelaySFX1, LOW);delay(10);};
+  if (SelectedSound==2) {digitalWrite(pinRelaySFX2, LOW);delay(10);};
+  if (SelectedSound==3) {digitalWrite(pinRelaySFX3, LOW);delay(10);};
+  if (SelectedSound==4) {digitalWrite(pinRelaySFX4, LOW);delay(10);};
+  propMode="SoundPlaying";
+}
+
+void CloseValve() {
+  digitalWrite(pinRelayValve, HIGH);
+  propMode="ValveClosed";
+}
+
+void OpenValve() {
+  digitalWrite(pinRelayValve, LOW);
+  propMode="ValveOpen";
+}
+
+void LightOff() {
+  digitalWrite(pinRelayLight, HIGH);
+  propMode="LightOff";
+}
+
+void LightOn() {
+  digitalWrite(pinRelayLight, LOW);
+  propMode="LightOn";
+}
+
+void SelectSound() {
+  if (SFXs==1) {
+    SelectedSound=LastSound+1;
+    if (SelectedSound>4) {SelectedSound=1;};
+  }
+  else {
+    SelectedSound=random(1,4);
+  }
+  LastSound=SelectedSound;
+}
+
+void CheckTrigger() {
+  if (analogRead(pinTrigger) > 512 && propMode=="Idle") {triggerCount+=1;} 
+  if (analogRead(pinTrigger) < 512 && propMode=="Completed") {propMode="Idle";}
+  if (triggerCount > triggerThreshold) {propMode="Triggered";triggerCount=0;}
 }
 
 void updateManRead() {
@@ -255,7 +330,6 @@ void updateManRead() {
   Serial1.print(String(analogRead(pinTrigger)));
   }
 }
-
 
 void altShow(String msg1, String msg2) {
   if (tAltShow==0) {WriteLCD2(msg1);tAltShow=millis();mAltShow=1;navSound(curSound);}
@@ -371,10 +445,17 @@ void WriteLCD2(String stext){
 }
 
 void LCDon(){Serial1.write(ESC); Serial1.write(0x41);}
+
 void LCDoff(){Serial1.write(ESC); Serial1.write(0x42);}
+
 void initLCD() {
 
   // Define custom characters
+
+  Serial1.write(ESC);Serial1.write(0x54);Serial1.write(1);Serial1.write(s1,8);
+  Serial1.write(ESC);Serial1.write(0x54);Serial1.write(2);Serial1.write(s2,8);
+  Serial1.write(ESC);Serial1.write(0x54);Serial1.write(3);Serial1.write(s3,8);
+  Serial1.write(ESC);Serial1.write(0x54);Serial1.write(4);Serial1.write(s4,8);
 
   Serial1.write(ESC);Serial1.write(0x54);Serial1.write(1);Serial1.write(s1,8);
   Serial1.write(ESC);Serial1.write(0x54);Serial1.write(2);Serial1.write(s2,8);
