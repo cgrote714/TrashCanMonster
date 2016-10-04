@@ -197,6 +197,7 @@ void loop(){
 
   if (sMenu=="Manual") {
     tMenu=0; //stay parked in this screen - no timeout
+    tSleep=millis(); //no sleep in this screen either
     updateManRead();
     if (manualPos==0) {
       altShow("Hold to RAISE","Press for next");
