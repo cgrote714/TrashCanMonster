@@ -1,12 +1,14 @@
+/* lines 274 to 290 are where the prop timing is adjusted */
+
 #include <EEPROM.h>
 const int pinButton = 0;
 const int pinTrigger = 1;
-const int pinRelaySFX1 = 2;
-const int pinRelaySFX2 = 4;
-const int pinRelaySFX3 = 7;
-const int pinRelaySFX4 = 8;
-const int pinRelayLight = 12;
-const int pinRelayValve = 13;
+const int pinRelaySFX1 = 7;
+const int pinRelaySFX2 = 6;
+const int pinRelaySFX3 = 5;
+const int pinRelaySFX4 = 4;
+const int pinRelayLight = 3;
+const int pinRelayValve = 2;
 const int Short = 1;
 const int Hold = 2;
 const int ShortReset = 0;
@@ -271,10 +273,10 @@ void SoundsOff() {
 
 void OpenDelay() {
   // certain sounds may take longer to finish or may want to add canned air
-  if (SelectedSound==1) {delay(10);};
-  if (SelectedSound==2) {delay(10);};
-  if (SelectedSound==3) {delay(10);};
-  if (SelectedSound==4) {delay(10);};
+  if (SelectedSound==1) {delay(1000);};
+  if (SelectedSound==2) {delay(1000);};
+  if (SelectedSound==3) {delay(1000);};
+  if (SelectedSound==4) {delay(1000);};
   propMode="ReadyToClose";
 }
 
@@ -328,8 +330,17 @@ void updateManRead() {
   if (millis() % 847 == 0) {
   Serial1.write(ESC);Serial1.write(0x45); Serial1.write(0x00);
   LCDmoveN(13);
-  Serial1.print(String(analogRead(pinTrigger)));
+  Serial1.print(RightPad(String(analogRead(pinTrigger))," ",4));
   }
+}
+
+String RightPad(String s1, String s2, int n1)  {
+  if (s1.length() < n1) {
+    for (int x=s1.length(); x < n1; x++) {
+      s1+=s2;
+    }
+  }
+  return s1;
 }
 
 void altShow(String msg1, String msg2) {
