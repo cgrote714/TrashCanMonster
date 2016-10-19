@@ -35,10 +35,13 @@ String sStartup;
 int manualPos=0;
 long tSleep=0;
 int triggerCount=0;
-const int triggerThreshold=500;
+int triggerCenter;
+const int triggerThreshold=30;
+const int triggerCountThreshold=500;
 String propMode = "Idle";
 int SelectedSound;
 int LastSound=0;
+long tnt=0; //time not triggered
 
 char ESC = 0xFE;
 
@@ -92,6 +95,9 @@ void setup() {
   WriteLCD2("(c)2016 C. Grote");
   LCDon();
 
+  // Initialize Trigger
+  initTrigger();
+  
   // Initialize Prop
   randomSeed(analogRead(5));
   initOutputs();
@@ -100,9 +106,8 @@ void setup() {
   ClearLCD();
   displayMode();
   sMenu = "Mode";
-  
-  //WriteLCD1("Mode: Off");
-  //WriteLCD1("Sounds: 1 2 3 4");
+  tnt=millis();
+  propMode = "Completed"; //initial state confirms trigger is not active before enabling
 }
 
 void loop(){
@@ -282,30 +287,51 @@ void OpenDelay() {
 
 void PlaySound() {
   // some sounds may take a while to get started
+  if (RunMode==1 || RunMode==3) {
   if (SelectedSound==1) {digitalWrite(pinRelaySFX1, LOW);delay(10);};
   if (SelectedSound==2) {digitalWrite(pinRelaySFX2, LOW);delay(10);};
   if (SelectedSound==3) {digitalWrite(pinRelaySFX3, LOW);delay(10);};
   if (SelectedSound==4) {digitalWrite(pinRelaySFX4, LOW);delay(10);};
+  }
   propMode="SoundPlaying";
 }
 
+void initTrigger() {
+  // see if trigger is alternating.  If it is, wait for it to stop.  Set center value.
+  triggerCenter=0;
+  int minVal=1023;
+  int maxVal=0;  
+  int checks=0;
+  while (triggerCenter==0) {
+    if (analogRead(pinTrigger) < minVal) {minVal = analogRead(pinTrigger);}
+    if (analogRead(pinTrigger) > maxVal) {maxVal = analogRead(pinTrigger);}
+    if (maxVal-minVal < 10) {triggerCenter=analogRead(pinTrigger);}
+    checks += 1;
+    if (checks > 2000) {
+      checks=0;
+      maxVal=0;
+      minVal=0;
+    }
+  }
+}
+
 void CloseValve() {
-  digitalWrite(pinRelayValve, HIGH);
+  if (RunMode>1) {digitalWrite(pinRelayValve, HIGH);}
   propMode="ValveClosed";
 }
 
 void OpenValve() {
-  digitalWrite(pinRelayValve, LOW);
+  if (RunMode>1) {digitalWrite(pinRelayValve, LOW);}
   propMode="ValveOpen";
 }
 
 void LightOff() {
-  digitalWrite(pinRelayLight, HIGH);
+  if (RunMode > 0) {digitalWrite(pinRelayLight, HIGH);}
   propMode="LightOff";
 }
 
 void LightOn() {
-  digitalWrite(pinRelayLight, LOW);
+  if (RunMode > 0) {digitalWrite(pinRelayLight, LOW);}
   propMode="LightOn";
 }
 
@@ -321,9 +347,18 @@ void SelectSound() {
 }
 
 void CheckTrigger() {
-  if (analogRead(pinTrigger) > 512 && propMode=="Idle") {triggerCount+=1;} 
-  if (analogRead(pinTrigger) < 512 && propMode=="Completed") {propMode="Idle";}
-  if (triggerCount > triggerThreshold) {propMode="Triggered";triggerCount=0;}
+  if (isTriggered() && propMode=="Idle") {triggerCount+=1;} 
+  if (triggerCount > triggerCountThreshold && propMode=="Idle") {propMode="Triggered";triggerCount=0;}
+  if (propMode=="Completed") {
+    if (isTriggered()==true) {tnt=millis();}
+    if (isTriggered()==false && millis()-tnt > 2000) {propMode="Idle";}
+  }
+  else {tnt=millis();}
+}
+
+boolean isTriggered() {
+  if (abs(analogRead(pinTrigger) - triggerCenter) > triggerThreshold) {return true;}
+  else {return false;}
 }
 
 void updateManRead() {
