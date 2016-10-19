@@ -316,12 +316,12 @@ void initTrigger() {
 }
 
 void CloseValve() {
-  if (RunMode>1) {digitalWrite(pinRelayValve, HIGH);}
+  if (RunMode>1 || sMenu=="Manual") {digitalWrite(pinRelayValve, HIGH);}
   propMode="ValveClosed";
 }
 
 void OpenValve() {
-  if (RunMode>1) {digitalWrite(pinRelayValve, LOW);}
+  if (RunMode>1 || sMenu=="Manual") {digitalWrite(pinRelayValve, LOW);}
   propMode="ValveOpen";
 }
 
@@ -374,13 +374,13 @@ int readTrigger() {
   return maxVal-minVal;
 }
 void updateManRead() {
-  initTrigger();
+  
   if (millis() % 347 == 0) {
-  //if (1==1) {
-  Serial1.write(ESC);Serial1.write(0x45); Serial1.write(0x00);
-  LCDmoveN(13);
-  Serial1.print(RightPad(String(analogRead(pinTrigger))," ",4));
-  //Serial1.print(RightPad(String(readTrigger())," ",4));
+    initTrigger();
+    Serial1.write(ESC);Serial1.write(0x45); Serial1.write(0x00);
+    LCDmoveN(13);
+    Serial1.print(RightPad(String(analogRead(pinTrigger))," ",4));
+    //Serial1.print(RightPad(String(readTrigger())," ",4));
   }
 }
 
