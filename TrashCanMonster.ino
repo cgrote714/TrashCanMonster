@@ -191,7 +191,7 @@ void loop(){
       sMenu="Manual";
       tAltShow=0;
       ClearLCD();
-      WriteLCD1("Down  Read: " + String(analogRead(pinTrigger)));
+      WriteLCD1("Down  Read:    ");
     }
     if (ButtonPressed() == Hold) {
       modeButton=HoldReset;
@@ -218,7 +218,7 @@ void loop(){
         modeButton=HoldReset;
         OpenValve();
         manualPos=1;
-        WriteLCD1("Up    Read: ");
+        WriteLCD1("Up    Read:   ");
         tAltShow=0;
       }
     }
@@ -232,7 +232,7 @@ void loop(){
         modeButton=HoldReset;
         CloseValve();
         manualPos=0;
-        WriteLCD1("Down  Read: ");
+        WriteLCD1("Down  Read:    ");
         tAltShow=0;
       }
     }
@@ -359,13 +359,28 @@ void CheckTrigger() {
 boolean isTriggered() {
   if (abs(analogRead(pinTrigger) - triggerCenter) > triggerThreshold) {return true;}
   else {return false;}
+  
+  //if (readTrigger()>60) {return true;}
+  //else {return false;} 
 }
 
+int readTrigger() {
+  int minVal=1023;
+  int maxVal=0;
+  for (int i; i<1500; i++) {
+    if(analogRead(pinTrigger)<minVal) {minVal=analogRead(pinTrigger);}
+    if(analogRead(pinTrigger)>maxVal) {maxVal=analogRead(pinTrigger);}
+  }
+  return maxVal-minVal;
+}
 void updateManRead() {
-  if (millis() % 847 == 0) {
+  initTrigger();
+  if (millis() % 347 == 0) {
+  //if (1==1) {
   Serial1.write(ESC);Serial1.write(0x45); Serial1.write(0x00);
   LCDmoveN(13);
   Serial1.print(RightPad(String(analogRead(pinTrigger))," ",4));
+  //Serial1.print(RightPad(String(readTrigger())," ",4));
   }
 }
 
