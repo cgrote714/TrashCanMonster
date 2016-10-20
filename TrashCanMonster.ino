@@ -281,7 +281,7 @@ void OpenDelay() {
   if (SelectedSound==1) {delay(2000);};
   if (SelectedSound==2) {delay(1710);};
   if (SelectedSound==3) {delay(2200);};
-  if (SelectedSound==4) {delay(2000);};
+  if (SelectedSound==4) {delay(1500);};
   propMode="ReadyToClose";
 }
 
@@ -336,6 +336,32 @@ void LightOn() {
 }
 
 void SelectSound() {
+  int numSounds = SFX1+SFX2+SFX3+SFX4;
+  if (SFXs==1) {
+    // Sequential
+    SelectedSound=LastSound+1;
+    if (SelectedSound>numSounds) {SelectedSound=1;}
+    if (SFX1==0 && SelectedSound==1) {SelectedSound=2;}
+    if (SFX2==0 && SelectedSound==2) {SelectedSound=3;}
+    if (SFX3==0 && SelectedSound==3) {SelectedSound=4;}
+    if (SFX4==0 && SelectedSound==4) {SelectedSound=1;}
+    LastSound=SelectedSound;
+  }
+  else {
+    // Random
+    SelectedSound=random(1,numSounds);
+    int pos=0;
+    for (int i=1; i<=4; i++) {
+      if (i==1 && SFX1==1) {pos+=1;}
+      if (i==2 && SFX2==1) {pos+=1;}
+      if (i==3 && SFX3==1) {pos+=1;}
+      if (i==4 && SFX4==1) {pos+=1;}
+      if (pos==SelectedSound) {SelectedSound=i;}
+    }
+  }
+}
+
+void SelectSound2() {
   if (SFXs==1) {
     SelectedSound=LastSound+1;
     if (SelectedSound>4) {SelectedSound=1;};
