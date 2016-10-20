@@ -3,10 +3,10 @@
 #include <EEPROM.h>
 const int pinButton = 0;
 const int pinTrigger = 1;
-const int pinRelaySFX1 = 4;
+const int pinRelaySFX1 = 7;
 const int pinRelaySFX2 = 5;
 const int pinRelaySFX3 = 6;
-const int pinRelaySFX4 = 7;
+const int pinRelaySFX4 = 4;
 const int pinRelayLight = 3;
 const int pinRelayValve = 2;
 const int Short = 1;
@@ -114,6 +114,7 @@ void loop(){
   if (sMenu=="Mode") {
     altShow("Press to change","Hold for options");
     tMenu=0;
+    if (RunMode==0 && millis() % 347 == 0) {initTrigger();}
     if (ButtonPressed() == Short) {
       modeButton=ShortReset;
       RunMode += 1;
@@ -278,8 +279,8 @@ void SoundsOff() {
 
 void OpenDelay() {
   // certain sounds may take longer to finish or may want to add canned air
-  if (SelectedSound==1) {delay(2000);};
-  if (SelectedSound==2) {delay(1710);};
+  if (SelectedSound==1) {delay(1300);};
+  if (SelectedSound==2) {delay(1210);};
   if (SelectedSound==3) {delay(2200);};
   if (SelectedSound==4) {delay(1500);};
   propMode="ReadyToClose";
@@ -291,7 +292,7 @@ void PlaySound() {
   if (SelectedSound==1) {digitalWrite(pinRelaySFX1, LOW);delay(100);};
   if (SelectedSound==2) {digitalWrite(pinRelaySFX2, LOW);delay(100);};
   if (SelectedSound==3) {digitalWrite(pinRelaySFX3, LOW);delay(10);};
-  if (SelectedSound==4) {digitalWrite(pinRelaySFX4, LOW);delay(300);};
+  if (SelectedSound==4) {digitalWrite(pinRelaySFX4, LOW);delay(10);};
   }
   propMode="SoundPlaying";
 }
@@ -326,7 +327,7 @@ void OpenValve() {
 }
 
 void LightOff() {
-  if (RunMode > 0) {digitalWrite(pinRelayLight, HIGH);}
+  if (RunMode > 0) {delay(1000);digitalWrite(pinRelayLight, HIGH);}
   propMode="LightOff";
 }
 
@@ -437,7 +438,7 @@ void navSound(int sfx) {
 int ButtonPressed() {
   if(analogRead(pinButton) > 512) {
     if (timeButtonOn < 10000) {timeButtonOn += 1;}
-    if (timeButtonOn > 4000 && modeButton == ShortReset) {modeButton=Hold;tMenu=millis();tSleep=millis();}
+    if (timeButtonOn > 3000 && modeButton == ShortReset) {modeButton=Hold;tMenu=millis();tSleep=millis();}
     if (modeButton != ShortReset) {timeButtonOn=0;}
     timeButtonOff = 0;
     } 
